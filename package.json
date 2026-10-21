@@ -1,0 +1,65 @@
+{
+  "name": "@local/deepseek-bot-army",
+  "version": "0.9.0",
+  "private": true,
+  "type": "module",
+  "description": "Deepseek Bot Army — always-on AI teammates with their own computer for DeepSeek Harness: roster, group chats, @mentions, approvals, memory, routines and heartbeat wake-ups.",
+  "license": "MIT",
+  "author": "tyxt-zvid",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "bundle",
+    "ai-teammates",
+    "bots",
+    "agents"
+  ],
+  "engines": {
+    "dsh": ">=0.2.1-rc.2 <0.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tyxt-zvid/deepseek-bot-army.git"
+  },
+  "homepage": "https://github.com/tyxt-zvid/deepseek-bot-army#readme",
+  "bugs": {
+    "url": "https://github.com/tyxt-zvid/deepseek-bot-army/issues"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "pack": "npm pack --pack-destination dist"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "lib/*.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "LICENSE",
+    "docs/*.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  }
+}

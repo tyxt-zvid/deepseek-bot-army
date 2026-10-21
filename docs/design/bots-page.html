@@ -1,0 +1,1234 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Deepseek Bot Army · Bots</title>
+<style>
+/* ── Design tokens · Linear dark, adapted for Deepseek Bot Army ───── */
+:root{
+  --bg:#08090a;--surface:#0f1011;--surface-2:#141516;--surface-3:#191a1b;--surface-hover:#202124;
+  --fg:#f7f8f8;--fg-2:#d0d6e0;--muted:#8a8f98;--meta:#7f848d;
+  --border:rgba(255,255,255,.08);--border-soft:rgba(255,255,255,.05);--border-strong:rgba(255,255,255,.14);
+  --accent:#5e6ad2;--accent-hover:#828fff;--accent-active:#4752c4;--accent-on:#ffffff;--accent-soft:rgba(94,106,210,.15);
+  --chief:#e08a4e;--growth:#a78bfa;--engineer:#3fb984;--team:#6f8ff5;
+  --success:#27a644;--success-soft:rgba(39,166,68,.12);--warn:#eab308;--warn-soft:rgba(234,179,8,.12);
+  --danger:#ef4444;--danger-soft:rgba(239,68,68,.12);
+  --overlay:rgba(0,0,0,.74);
+  --shadow-modal:0 24px 80px rgba(0,0,0,.62),0 0 0 1px rgba(255,255,255,.08);
+  --focus:0 0 0 2px var(--bg),0 0 0 4px var(--accent-hover);
+  --font-display:"Inter Variable","Inter","SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --font-body:"Inter Variable","Inter","SF Pro Text",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --font-mono:"Berkeley Mono",ui-monospace,"SF Mono",Menlo,Monaco,Consolas,monospace;
+  --r-sm:6px;--r-md:8px;--r-lg:12px;--r-pill:999px;
+  --ease:cubic-bezier(.2,0,0,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;height:100dvh;overflow:hidden;background:var(--bg);color:var(--fg);
+  font:400 13px/1.5 var(--font-body);font-feature-settings:"cv01","ss03";
+  text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4,p{font-family:var(--font-display);margin:0}
+button,a,input,textarea,select{font:inherit;color:inherit}
+button{border:0;background:none;padding:0;cursor:pointer}
+a{color:inherit;text-decoration:none}
+img,svg{display:block}
+::selection{background:var(--accent);color:var(--accent-on)}
+:where(button,a,input,textarea,select,[tabindex]):focus-visible{outline:none;box-shadow:var(--focus)}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:8px;border:2px solid var(--bg)}
+::-webkit-scrollbar-track{background:transparent}
+.icon-sprite{position:absolute;width:0;height:0;overflow:hidden}
+.icon{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+.icon-sm{width:12px;height:12px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* ── Shared controls ──────────────────────────────────────────────── */
+.btn{height:30px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 11px;border:1px solid transparent;border-radius:var(--r-sm);font-size:11.5px;font-weight:510;letter-spacing:.01em;white-space:nowrap;transition:background 150ms var(--ease),border-color 150ms var(--ease),color 150ms var(--ease)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-on)}
+.btn-primary:hover{background:var(--accent-active);border-color:var(--accent-active)}
+.btn-secondary{background:transparent;border-color:var(--border);color:var(--fg-2)}
+.btn-secondary:hover{background:var(--surface-2);border-color:var(--border-strong);color:var(--fg)}
+.btn-ghost{background:transparent;color:var(--muted)}
+.btn-ghost:hover{background:var(--surface-2);color:var(--fg)}
+.btn-sm{height:28px;padding:0 9px;font-size:11px}
+.icon-btn{width:28px;height:28px;display:grid;place-items:center;border-radius:var(--r-sm);color:var(--muted);transition:background 150ms var(--ease),color 150ms var(--ease)}
+.icon-btn:hover{background:var(--surface-2);color:var(--fg)}
+.avatar{--bot:var(--muted);position:relative;width:28px;height:28px;display:grid;place-items:center;flex:0 0 auto;border-radius:8px;background:color-mix(in oklab,var(--bot) 16%,transparent);border:1px solid color-mix(in oklab,var(--bot) 30%,transparent);font-family:"Apple Color Emoji","Segoe UI Emoji",var(--font-body);font-size:14px;line-height:1;isolation:isolate}
+.bot-chief{--bot:var(--chief)}.bot-growth{--bot:var(--growth)}.bot-engineer{--bot:var(--engineer)}.bot-team{--bot:var(--team)}
+.avatar.is-working::after{content:"";position:absolute;inset:-3px;border-radius:10px;border:1px solid color-mix(in oklab,var(--bot) 55%,transparent);animation:avatarPulse 2.1s var(--ease) infinite;pointer-events:none}
+@keyframes avatarPulse{0%{transform:scale(.94);opacity:.7}70%,100%{transform:scale(1.16);opacity:0}}
+.group-avatar{display:grid;grid-template-columns:repeat(2,4px);grid-template-rows:repeat(2,4px);gap:2px;place-content:center;background:var(--surface-2);border-color:var(--border)}
+.group-avatar i{width:4px;height:4px;border-radius:50%;background:var(--muted)}
+.group-avatar i:nth-child(1){background:var(--chief)}.group-avatar i:nth-child(2){background:var(--growth)}.group-avatar i:nth-child(3){background:var(--engineer)}.group-avatar i:nth-child(4){background:var(--team)}
+.sync-tag{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 6px;border:1px solid var(--border);border-radius:4px;font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;color:var(--muted);white-space:nowrap}
+.sync-tag .icon{width:10px;height:10px}
+
+/* ── App chrome ───────────────────────────────────────────────────── */
+.app{height:100dvh;display:grid;grid-template-rows:52px minmax(0,1fr)}
+.appbar{display:grid;grid-template-columns:252px minmax(0,1fr) 306px;align-items:center;background:var(--bg);border-bottom:1px solid var(--border);position:relative;z-index:20}
+.appbar-left{height:100%;display:flex;align-items:center;gap:9px;padding:0 14px;border-right:1px solid var(--border-soft);min-width:0}
+.brand-mark{width:20px;height:20px;border-radius:6px;background:var(--surface-3);border:1px solid var(--border-strong);display:grid;grid-template-columns:repeat(2,3px);grid-template-rows:repeat(2,3px);gap:2px;place-content:center;flex:0 0 auto}
+.brand-mark span{width:3px;height:3px;border-radius:1px;background:var(--muted)}
+.brand-mark span:first-child{background:var(--accent-hover)}
+.brand-copy{display:flex;align-items:baseline;gap:7px;min-width:0}
+.brand-name{font-family:var(--font-display);font-size:13px;font-weight:590;letter-spacing:-.01em;white-space:nowrap}
+.brand-sub{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--meta);border:1px solid var(--border);border-radius:3px;padding:1px 4px;white-space:nowrap}
+.view-tabs{justify-self:center;display:flex;align-items:center;gap:2px;padding:2px;background:var(--surface);border:1px solid var(--border-soft);border-radius:8px}
+.view-tab{height:26px;padding:0 12px;border-radius:5px;font-size:11.5px;font-weight:510;color:var(--muted);transition:background 150ms var(--ease),color 150ms var(--ease)}
+.view-tab:hover{color:var(--fg);background:var(--surface-2)}
+.view-tab.is-active{color:var(--fg);background:var(--surface-3);box-shadow:inset 0 0 0 1px var(--border-soft)}
+.appbar-right{height:100%;display:flex;align-items:center;justify-content:flex-end;gap:7px;padding:0 12px;min-width:0}
+.command{height:29px;width:126px;display:flex;align-items:center;gap:7px;padding:0 8px;border:1px solid transparent;border-radius:6px;color:var(--meta);transition:background 150ms var(--ease),border-color 150ms var(--ease),color 150ms var(--ease)}
+.command:hover{background:var(--surface-2);border-color:var(--border);color:var(--fg-2)}
+.command span{font-size:10.5px;white-space:nowrap}
+.command kbd{margin-left:auto;font-family:var(--font-mono);font-size:8.5px;color:var(--meta);border:1px solid var(--border);border-radius:3px;padding:1px 4px;background:var(--surface)}
+.user-avatar{width:26px;height:26px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border-strong);display:grid;place-items:center;font-family:var(--font-mono);font-size:8.5px;color:var(--fg-2);letter-spacing:.04em}
+.workspace{min-height:0;position:relative}
+.view{height:100%;min-height:0;animation:viewIn 150ms var(--ease)}
+@keyframes viewIn{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
+
+/* ── Chat layout ──────────────────────────────────────────────────── */
+.chat-view{display:grid;grid-template-columns:252px minmax(0,1fr) 306px;min-height:0}
+.rail{min-height:0;display:flex;flex-direction:column;background:var(--bg);border-right:1px solid var(--border-soft)}
+.rail-head{flex:0 0 auto;padding:14px 12px 10px}
+.rail-title-row{display:flex;align-items:center;gap:7px}
+.rail-title{font-size:15px;font-weight:590;line-height:1.2;letter-spacing:-.01em}
+.rail-count{font-family:var(--font-mono);font-size:9px;color:var(--meta);border:1px solid var(--border);border-radius:4px;padding:1px 5px}
+.rail-title-row .icon-btn{margin-left:auto;width:26px;height:26px}
+.rail-search{height:30px;margin-top:12px;display:flex;align-items:center;gap:7px;padding:0 8px;border:1px solid var(--border-soft);border-radius:6px;background:var(--surface);color:var(--meta);transition:border-color 150ms var(--ease),background 150ms var(--ease)}
+.rail-search:focus-within{border-color:var(--border-strong);background:var(--surface-2)}
+.rail-search input{width:100%;min-width:0;border:0;background:transparent;outline:none;font-size:10.5px;color:var(--fg-2)}
+.rail-search input::placeholder{color:var(--meta)}
+.rail-search kbd{font-family:var(--font-mono);font-size:8px;color:var(--meta);border:1px solid var(--border);border-radius:3px;padding:1px 4px}
+.rail-scroll{flex:1;min-height:0;overflow-y:auto;padding:0 8px 12px}
+.rail-section + .rail-section{margin-top:2px}
+.rail-label{display:flex;justify-content:space-between;align-items:center;padding:12px 8px 5px;font-size:9.5px;font-weight:510;letter-spacing:.08em;text-transform:uppercase;color:var(--meta)}
+.rail-label span{font-family:var(--font-mono);font-size:8.5px;letter-spacing:0;color:var(--meta)}
+.rail-item{width:100%;min-height:42px;display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:9px;padding:6px 8px;border:1px solid transparent;border-radius:7px;text-align:left;transition:background 150ms var(--ease),border-color 150ms var(--ease)}
+.rail-item:hover{background:var(--surface-2);border-color:var(--border-soft)}
+.rail-item.is-active{background:var(--surface-2);border-color:var(--border)}
+.rail-name-row{display:flex;align-items:center;gap:5px;min-width:0}
+.rail-name{font-size:12px;font-weight:510;line-height:1.3;color:var(--fg-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rail-item.is-active .rail-name{color:var(--fg)}
+.rail-role{font-size:10px;line-height:1.45;color:var(--meta);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.rail-badges{display:flex;align-items:center;gap:3px}
+.badge{min-width:16px;height:16px;padding:0 4px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;background:var(--surface-3);border:1px solid var(--border-soft);font-family:var(--font-mono);font-size:8.5px;font-weight:400;color:var(--fg-2);font-variant-numeric:tabular-nums}
+.badge.pending{background:var(--warn-soft);border-color:transparent;color:var(--warn)}
+.working-dot{width:5px;height:5px;border-radius:50%;background:var(--growth);box-shadow:0 0 0 3px color-mix(in oklab,var(--growth) 15%,transparent);animation:dotPulse 1.8s var(--ease) infinite;margin-right:2px}
+@keyframes dotPulse{0%,100%{opacity:1}50%{opacity:.35}}
+.rail-foot{flex:0 0 auto;padding:8px;border-top:1px solid var(--border-soft)}
+.rail-link{width:100%;height:32px;display:grid;grid-template-columns:15px minmax(0,1fr) auto;align-items:center;gap:8px;padding:0 8px;border-radius:6px;font-size:10.5px;color:var(--muted);text-align:left;transition:background 150ms var(--ease),color 150ms var(--ease)}
+.rail-link:hover{background:var(--surface-2);color:var(--fg)}
+.rail-link .icon{width:13px;height:13px}
+.rail-link .foot-count{font-family:var(--font-mono);font-size:8.5px;color:var(--meta)}
+.rail-empty{padding:24px 8px;font-size:10.5px;color:var(--meta);text-align:center}
+
+/* ── Thread ───────────────────────────────────────────────────────── */
+.thread{min-width:0;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.thread-head{height:56px;flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:0 20px;border-bottom:1px solid var(--border-soft)}
+.thread-id{display:flex;align-items:center;gap:9px;min-width:0}
+.thread-id .avatar{width:30px;height:30px;font-size:15px;border-radius:8px}
+.thread-name-row{display:flex;align-items:center;gap:7px;min-width:0}
+.thread-name{font-size:12.5px;font-weight:590;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.thread-status{display:flex;align-items:center;gap:5px;font-size:10px;line-height:1.4;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status-pulse{width:5px;height:5px;border-radius:50%;background:var(--growth);animation:dotPulse 1.8s var(--ease) infinite;flex:0 0 auto}
+.thread-actions{margin-left:auto;display:flex;align-items:center;gap:5px}
+.context-chip{height:28px;display:inline-flex;align-items:center;gap:6px;padding:0 8px;border:1px solid var(--border-soft);border-radius:6px;color:var(--muted);font-size:10px;transition:background 150ms var(--ease),border-color 150ms var(--ease),color 150ms var(--ease)}
+.context-chip:hover{background:var(--surface-2);border-color:var(--border);color:var(--fg-2)}
+.context-chip .icon{width:12px;height:12px}
+.thread-scroll{flex:1;min-height:0;overflow-y:auto;padding:22px 0 12px}
+.thread-inner{width:min(100%,700px);margin:0 auto;padding:0 24px;display:flex;flex-direction:column;gap:18px}
+.date-line{display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--font-mono);font-size:8.5px;letter-spacing:.06em;color:var(--meta);text-transform:uppercase}
+.date-line::before,.date-line::after{content:"";width:28px;height:1px;background:var(--border-soft)}
+.system-note{display:flex;justify-content:center}
+.system-note span{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border:1px solid var(--border-soft);border-radius:5px;background:var(--surface);font-size:9.5px;color:var(--meta);text-align:center;max-width:100%}
+.system-note b{font-weight:510;color:var(--fg-2)}
+.system-note .icon{width:10px;height:10px;color:var(--team)}
+.msg-user{align-self:flex-end;max-width:78%;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.msg-user.bot-growth{--bot:var(--growth)}.msg-user.bot-chief{--bot:var(--chief)}.msg-user.bot-engineer{--bot:var(--engineer)}.msg-user.bot-team{--bot:var(--team)}
+.bubble-user{padding:9px 11px;border:1px solid color-mix(in oklab,var(--bot) 26%,transparent);border-radius:10px 10px 3px 10px;background:color-mix(in oklab,var(--bot) 14%,var(--surface));font-size:13px;line-height:1.7;color:var(--fg);text-wrap:pretty}
+.msg-meta{font-family:var(--font-mono);font-size:8.5px;color:var(--meta);padding-right:1px}
+.msg-bot{display:grid;grid-template-columns:24px minmax(0,1fr);gap:10px;align-items:start}
+.msg-bot>.avatar{width:24px;height:24px;border-radius:7px;font-size:12px}
+.msg-by{display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:10.5px;font-weight:590;color:var(--fg-2)}
+.msg-by time{font-family:var(--font-mono);font-size:8.5px;font-weight:400;color:var(--meta)}
+.msg-copy p{margin:0 0 7px;font-size:13px;line-height:1.7;color:var(--fg-2);text-wrap:pretty}
+.msg-copy p:last-child{margin-bottom:0}
+.msg-copy strong{font-weight:590;color:var(--fg)}
+.msg-copy code{font-family:var(--font-mono);font-size:10.5px;color:var(--fg);background:var(--surface-3);border:1px solid var(--border-soft);border-radius:4px;padding:1px 4px}
+.caret{display:inline-block;width:1px;height:13px;margin-left:2px;vertical-align:-2px;background:var(--accent-hover);animation:caretBlink 1.05s step-end infinite}
+@keyframes caretBlink{0%,64%{opacity:1}65%,100%{opacity:0}}
+.activity-line{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:3px 7px;border:1px solid var(--border-soft);border-radius:5px;background:var(--surface);font-family:var(--font-mono);font-size:8.5px;color:var(--meta)}
+.activity-bars{display:flex;align-items:flex-end;gap:2px;height:9px}
+.activity-bars i{width:2px;border-radius:1px;background:var(--growth);animation:barPulse 1.1s var(--ease) infinite}
+.activity-bars i:nth-child(1){height:4px;animation-delay:0ms}.activity-bars i:nth-child(2){height:8px;animation-delay:120ms}.activity-bars i:nth-child(3){height:5px;animation-delay:240ms}
+@keyframes barPulse{0%,100%{opacity:.35;transform:scaleY(.7)}50%{opacity:1;transform:scaleY(1)}}
+.activity-line b{color:var(--fg-2);font-weight:510}
+
+/* Approval card */
+.approval{max-width:620px;margin-left:34px;background:var(--surface);border:1px solid var(--border);border-radius:9px;overflow:hidden;transition:opacity 150ms var(--ease),border-color 150ms var(--ease)}
+.approval.is-approved{border-color:color-mix(in oklab,var(--success) 35%,var(--border))}
+.approval-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-bottom:1px solid var(--border-soft)}
+.status-chip{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 6px;border-radius:4px;background:var(--warn-soft);color:var(--warn);font-family:var(--font-mono);font-size:9px;letter-spacing:.03em;white-space:nowrap}
+.status-chip .dot{width:4px;height:4px;border-radius:50%;background:currentColor}
+.approval-body{padding:12px 14px 13px}
+.approval-title{font-size:13px;font-weight:590;line-height:1.5;margin-bottom:5px}
+.approval-desc{font-size:11px;line-height:1.65;color:var(--muted);margin-bottom:10px;text-wrap:pretty}
+.approval-checks{display:flex;flex-direction:column;gap:5px;list-style:none;margin:0;padding:0}
+.approval-checks li{display:flex;align-items:flex-start;gap:6px;font-size:10px;line-height:1.55;color:var(--fg-2)}
+.approval-checks .icon{width:11px;height:11px;margin-top:2px;color:var(--success)}
+.approval-actions{display:flex;align-items:center;gap:5px;padding:9px 12px;border-top:1px solid var(--border-soft);background:color-mix(in oklab,var(--surface-3) 32%,var(--surface))}
+.approval-actions .dismiss{margin-left:auto}
+.approval-done{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--success);padding:9px 12px;border-top:1px solid var(--border-soft)}
+.revision-box{padding:10px 12px 12px;border-top:1px solid var(--border-soft);background:var(--surface-2)}
+.revision-box textarea{width:100%;min-height:58px;padding:8px 9px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--fg);font-size:11px;line-height:1.6;resize:vertical;outline:none}
+.revision-box textarea:focus{border-color:var(--accent)}
+.revision-actions{display:flex;justify-content:flex-end;gap:5px;margin-top:7px}
+
+/* Empty state */
+.empty-state{width:min(100%,700px);margin:0 auto;padding:58px 24px 32px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.empty-orbit{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--border);margin-bottom:16px;position:relative}
+.empty-orbit .avatar{width:34px;height:34px;border-radius:10px;font-size:17px}
+.empty-state h2{max-width:23ch;font-size:19px;line-height:1.55;font-weight:510;letter-spacing:0;color:var(--fg);text-wrap:balance}
+.empty-state h2 span{color:var(--bot,var(--growth))}
+.starter-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:20px;max-width:590px}
+.starter-chip{height:28px;padding:0 10px;border:1px solid var(--border);border-radius:var(--r-pill);background:var(--surface);font-size:10.5px;color:var(--fg-2);transition:background 150ms var(--ease),border-color 150ms var(--ease),color 150ms var(--ease)}
+.starter-chip:hover{background:var(--surface-2);border-color:var(--border-strong);color:var(--fg)}
+
+/* Composer */
+.composer{flex:0 0 auto;padding:8px 20px 14px;background:var(--bg)}
+.composer-inner{width:min(100%,700px);margin:0 auto}
+.composer-box{padding:9px 10px 7px;border:1px solid var(--border);border-radius:9px;background:var(--surface);transition:border-color 150ms var(--ease),box-shadow 150ms var(--ease)}
+.composer-box:focus-within{border-color:color-mix(in oklab,var(--accent) 50%,var(--border));box-shadow:0 0 0 3px var(--accent-soft)}
+.composer textarea{display:block;width:100%;min-height:26px;max-height:120px;resize:none;border:0;background:transparent;outline:none;font-size:12.5px;line-height:1.6;color:var(--fg);padding:0 2px}
+.composer textarea::placeholder{color:var(--meta)}
+.composer-tools{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:5px}
+.composer-left{display:flex;align-items:center;gap:2px;min-width:0}
+.tool-btn{height:25px;min-width:25px;display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:0 5px;border-radius:5px;color:var(--meta);font-size:9.5px;transition:background 150ms var(--ease),color 150ms var(--ease)}
+.tool-btn:hover{background:var(--surface-3);color:var(--fg-2)}
+.composer-hint{font-family:var(--font-mono);font-size:8px;color:var(--meta);margin-left:3px;white-space:nowrap}
+.send-btn{width:28px;height:28px;border-radius:6px;background:var(--accent);color:var(--accent-on);display:grid;place-items:center;transition:background 150ms var(--ease)}
+.send-btn:hover{background:var(--accent-active)}
+.send-btn .icon{width:13px;height:13px}
+
+/* ── Context panel ────────────────────────────────────────────────── */
+.context-panel{min-height:0;display:flex;flex-direction:column;background:var(--bg);border-left:1px solid var(--border-soft)}
+.context-tabs{height:44px;flex:0 0 auto;display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border-soft)}
+.context-tab{position:relative;font-size:10.5px;font-weight:510;color:var(--meta);transition:background 150ms var(--ease),color 150ms var(--ease)}
+.context-tab:hover{background:var(--surface);color:var(--fg-2)}
+.context-tab.is-active{color:var(--fg)}
+.context-tab.is-active::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:1px;background:var(--fg)}
+.context-tab .tab-count{font-family:var(--font-mono);font-size:8px;margin-left:3px;color:var(--warn)}
+.context-body{flex:1;min-height:0;overflow-y:auto;padding:14px}
+.context-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.panel-kicker{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--meta)}
+.panel-title{font-size:12px;font-weight:590;color:var(--fg)}
+.panel-sub{font-size:10px;line-height:1.6;color:var(--meta);margin-top:3px}
+.panel-section+.panel-section{margin-top:18px;padding-top:16px;border-top:1px solid var(--border-soft)}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.section-label{font-size:9.5px;font-weight:510;letter-spacing:.06em;text-transform:uppercase;color:var(--meta)}
+.section-meta{font-family:var(--font-mono);font-size:8.5px;color:var(--meta)}
+.computer-state{display:flex;align-items:center;gap:6px;padding:8px 9px;border:1px solid var(--border-soft);border-radius:6px;background:var(--surface);font-size:10px;color:var(--fg-2);margin-bottom:10px}
+.computer-state .status-pulse{background:var(--success)}
+.computer-state .mono{font-family:var(--font-mono);font-size:8.5px;color:var(--meta);margin-left:auto}
+.path-card{padding:8px 9px;border:1px solid var(--border-soft);border-radius:6px;background:var(--surface)}
+.path-card+.path-card{margin-top:6px}
+.path-head{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.path-label{font-size:9.5px;color:var(--muted)}
+.copy-btn{width:20px;height:20px;display:grid;place-items:center;border-radius:4px;color:var(--meta)}
+.copy-btn:hover{background:var(--surface-3);color:var(--fg-2)}
+.copy-btn .icon{width:10px;height:10px}
+.path-value{margin-top:5px;font-family:var(--font-mono);font-size:8.5px;line-height:1.55;color:var(--fg-2);word-break:break-all}
+.file-list{margin-top:2px}
+.file-row{width:100%;display:grid;grid-template-columns:21px minmax(0,1fr) auto;align-items:center;gap:7px;padding:6px 4px;border-radius:5px;text-align:left;transition:background 150ms var(--ease)}
+.file-row:hover{background:var(--surface-2)}
+.file-type{width:21px;height:21px;border:1px solid var(--border-soft);border-radius:4px;background:var(--surface);display:grid;place-items:center;font-family:var(--font-mono);font-size:6.5px;letter-spacing:.02em;color:var(--muted)}
+.file-name{font-size:10.5px;color:var(--fg-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-meta{font-family:var(--font-mono);font-size:8px;color:var(--meta)}
+.memory-note{display:flex;align-items:flex-start;gap:6px;padding:7px 8px;margin-bottom:10px;border:1px solid color-mix(in oklab,var(--success) 24%,transparent);border-radius:6px;background:var(--success-soft);font-size:9px;line-height:1.5;color:var(--success)}
+.memory-note .icon{width:11px;height:11px;margin-top:1px}
+.memory-note span{font-family:var(--font-mono);font-size:8.5px}
+.memory-item{padding:9px 0;border-top:1px solid var(--border-soft)}
+.memory-item:first-of-type{border-top:0;padding-top:0}
+.memory-item p{font-size:10.5px;line-height:1.6;color:var(--fg-2)}
+.memory-meta{display:flex;justify-content:space-between;gap:8px;margin-top:5px;font-family:var(--font-mono);font-size:8px;color:var(--meta)}
+.routine{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:9px 0;border-top:1px solid var(--border-soft)}
+.routine:first-of-type{border-top:0;padding-top:0}
+.routine-title{font-size:10.5px;font-weight:510;color:var(--fg-2);line-height:1.45}
+.routine-meta{margin-top:4px;font-family:var(--font-mono);font-size:8px;color:var(--meta);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.routine-actions{display:flex;align-items:center;gap:5px}
+.run-btn{height:22px;padding:0 6px;border:1px solid var(--border);border-radius:4px;font-size:8.5px;color:var(--muted);white-space:nowrap}
+.run-btn:hover{border-color:var(--border-strong);color:var(--fg)}
+.switch{width:26px;height:15px;border-radius:var(--r-pill);border:1px solid var(--border);background:var(--surface-3);position:relative;flex:0 0 auto;transition:background 150ms var(--ease),border-color 150ms var(--ease)}
+.switch::after{content:"";position:absolute;width:9px;height:9px;left:2px;top:2px;border-radius:50%;background:var(--meta);transition:transform 150ms var(--ease),background 150ms var(--ease)}
+.switch.is-on{background:var(--accent-soft);border-color:color-mix(in oklab,var(--accent) 60%,var(--border))}
+.switch.is-on::after{transform:translateX(11px);background:var(--accent-hover)}
+.mini-task{padding:9px;border:1px solid var(--border-soft);border-radius:6px;background:var(--surface)}
+.mini-task+.mini-task{margin-top:6px}
+.mini-task-title{font-size:10.5px;font-weight:510;line-height:1.45;color:var(--fg-2)}
+.mini-task-meta{display:flex;align-items:center;gap:5px;margin-top:5px;font-family:var(--font-mono);font-size:8px;color:var(--meta)}
+.mini-task-foot{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-top:8px}
+
+/* ── Tasks view ───────────────────────────────────────────────────── */
+.tasks-view,.market-view{overflow-y:auto}
+.tasks-shell{max-width:1120px;margin:0 auto;padding:28px 36px 48px}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:24px}
+.page-eyebrow{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--meta);margin-bottom:8px}
+.page-title{font-size:27px;font-weight:590;line-height:1.2;letter-spacing:-.01em}
+.page-sub{margin-top:7px;font-size:11.5px;line-height:1.65;color:var(--muted);max-width:64ch}
+.page-stats{display:flex;align-items:center;gap:14px;padding-bottom:2px;flex:0 0 auto}
+.page-stat{display:flex;align-items:baseline;gap:5px;font-size:10px;color:var(--meta)}
+.page-stat b{font-family:var(--font-mono);font-size:14px;font-weight:400;color:var(--fg-2)}
+.task-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border-soft);margin-bottom:2px}
+.filter-tabs{display:flex;align-items:center;gap:2px}
+.filter-tab{position:relative;height:36px;padding:0 10px;font-size:11px;font-weight:510;color:var(--meta);transition:color 150ms var(--ease)}
+.filter-tab:hover{color:var(--fg-2)}
+.filter-tab.is-active{color:var(--fg)}
+.filter-tab.is-active::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:1px;background:var(--fg)}
+.filter-count{font-family:var(--font-mono);font-size:8.5px;color:var(--meta);margin-left:4px}
+.toolbar-meta{font-family:var(--font-mono);font-size:8.5px;color:var(--meta);white-space:nowrap}
+.task-list{border-bottom:1px solid var(--border-soft)}
+.task-row{display:grid;grid-template-columns:30px minmax(0,1fr) 104px 82px auto;gap:12px;align-items:center;min-height:64px;padding:11px 8px;border-bottom:1px solid var(--border-soft);transition:background 150ms var(--ease),opacity 150ms var(--ease)}
+.task-row:hover{background:var(--surface)}
+.task-row .avatar{width:28px;height:28px}
+.task-main{min-width:0}
+.task-title-line{display:flex;align-items:center;gap:7px;min-width:0}
+.task-title{font-size:12px;font-weight:510;line-height:1.4;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.task-source{display:flex;align-items:center;gap:5px;margin-top:3px;font-size:9.5px;color:var(--meta);white-space:nowrap;overflow:hidden}
+.task-source b{font-weight:510;color:var(--muted)}
+.source-sep{width:2px;height:2px;border-radius:50%;background:var(--meta);flex:0 0 auto}
+.task-state{display:flex;align-items:center;gap:5px;font-size:9.5px;color:var(--muted);white-space:nowrap}
+.state-dot{width:5px;height:5px;border-radius:50%;flex:0 0 auto}
+.state-dot.review{background:var(--warn)}.state-dot.working{background:var(--success);animation:dotPulse 1.8s var(--ease) infinite}.state-dot.done{background:var(--meta)}
+.task-time{font-family:var(--font-mono);font-size:8.5px;color:var(--meta);text-align:right;white-space:nowrap}
+.task-actions{display:flex;align-items:center;justify-content:flex-end;gap:4px}
+.task-actions .icon-btn{width:26px;height:26px}
+.task-actions .icon-btn:hover{color:var(--danger);background:var(--danger-soft)}
+.done-label{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-mono);font-size:8.5px;color:var(--success);padding-right:5px}
+.empty-filter{padding:54px 16px;text-align:center;color:var(--meta);font-size:11px}
+
+/* ── Marketplace ──────────────────────────────────────────────────── */
+.market-shell{max-width:1180px;margin:0 auto;padding:28px 36px 48px}
+.market-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:18px}
+.market-search{height:34px;width:250px;display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--meta);flex:0 0 auto;transition:border-color 150ms var(--ease)}
+.market-search:focus-within{border-color:var(--accent)}
+.market-search input{width:100%;min-width:0;border:0;background:transparent;outline:none;font-size:11px;color:var(--fg-2)}
+.market-search input::placeholder{color:var(--meta)}
+.market-cats{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.cat-chip{height:26px;padding:0 9px;border:1px solid var(--border);border-radius:var(--r-pill);background:transparent;font-size:10px;color:var(--muted);transition:background 150ms var(--ease),border-color 150ms var(--ease),color 150ms var(--ease)}
+.cat-chip:hover{border-color:var(--border-strong);color:var(--fg-2)}
+.cat-chip.is-active{background:var(--surface-3);border-color:var(--border-strong);color:var(--fg)}
+.bot-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.bot-card{min-height:174px;display:flex;flex-direction:column;padding:13px;border:1px solid var(--border);border-radius:9px;background:var(--surface);transition:background 150ms var(--ease),border-color 150ms var(--ease)}
+.bot-card:hover{background:var(--surface-2);border-color:var(--border-strong)}
+.bot-card-head{display:flex;align-items:flex-start;gap:9px}
+.bot-card .avatar{width:34px;height:34px;border-radius:10px;font-size:17px}
+.bot-card-name{font-size:12.5px;font-weight:590;line-height:1.3;color:var(--fg)}
+.bot-card-role{margin-top:2px;font-family:var(--font-mono);font-size:8px;letter-spacing:.05em;text-transform:uppercase;color:var(--meta)}
+.bot-card .btn{margin-left:auto;height:26px;padding:0 8px;font-size:10px}
+.bot-desc{margin-top:11px;font-size:10.5px;line-height:1.65;color:var(--muted);text-wrap:pretty}
+.bot-card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:11px}
+.bot-usage{font-family:var(--font-mono);font-size:8px;color:var(--meta)}
+.installed{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 7px;border:1px solid var(--border);border-radius:5px;font-size:9.5px;color:var(--muted)}
+.market-empty{grid-column:1/-1;padding:60px 16px;text-align:center;border:1px dashed var(--border);border-radius:9px;font-size:11px;color:var(--meta)}
+
+/* ── Modals ───────────────────────────────────────────────────────── */
+.modal-layer{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:24px;background:var(--overlay)}
+.modal-layer.is-open{display:flex}
+.modal{width:min(600px,100%);max-height:calc(100dvh - 48px);display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-modal);animation:modalIn 150ms var(--ease)}
+.modal-wide{width:min(650px,100%)}
+@keyframes modalIn{from{opacity:0;transform:translateY(5px) scale(.995)}to{opacity:1;transform:none}}
+.modal-head{display:flex;align-items:flex-start;gap:14px;padding:18px 20px 14px;border-bottom:1px solid var(--border-soft)}
+.modal-kicker{font-family:var(--font-mono);font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--meta);margin-bottom:5px}
+.modal-title{font-size:16px;font-weight:590;line-height:1.3}
+.modal-sub{margin-top:5px;font-size:10.5px;line-height:1.55;color:var(--muted)}
+.modal-close{margin-left:auto;width:28px;height:28px;display:grid;place-items:center;border-radius:6px;color:var(--meta)}
+.modal-close:hover{background:var(--surface-3);color:var(--fg)}
+.modal-body{padding:18px 20px;overflow-y:auto}
+.modal-foot{display:flex;align-items:center;justify-content:flex-end;gap:7px;padding:12px 20px;border-top:1px solid var(--border-soft);background:var(--surface)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.form-field.full{grid-column:1/-1}
+.form-label{font-size:10px;color:var(--muted)}
+.form-label em{font-style:normal;color:var(--meta)}
+.input,.select,.textarea{width:100%;border:1px solid var(--border);border-radius:6px;background:var(--surface-2);color:var(--fg);font-size:11px;line-height:1.5;outline:none;transition:border-color 150ms var(--ease),background 150ms var(--ease)}
+.input,.select{height:34px;padding:0 9px}
+.textarea{min-height:70px;padding:8px 9px;resize:vertical}
+.input::placeholder,.textarea::placeholder{color:var(--meta)}
+.input:focus,.select:focus,.textarea:focus{border-color:var(--accent);background:var(--surface)}
+.select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 13px) 14px,calc(100% - 9px) 14px;background-size:4px 4px,4px 4px;background-repeat:no-repeat;padding-right:24px}
+.avatar-picker{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.avatar-choice{width:32px;height:32px;display:grid;place-items:center;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);font-size:15px;color:var(--meta);transition:border-color 150ms var(--ease),background 150ms var(--ease)}
+.avatar-choice:hover{border-color:var(--border-strong);background:var(--surface-3)}
+.avatar-choice.is-selected{border-color:var(--accent);background:var(--accent-soft)}
+.accent-picker{display:flex;align-items:center;gap:7px;height:34px}
+.swatch{width:20px;height:20px;border-radius:50%;background:var(--c);border:2px solid transparent;box-shadow:0 0 0 1px var(--border);transition:box-shadow 150ms var(--ease),transform 150ms var(--ease)}
+.swatch:hover{transform:scale(1.06)}
+.swatch.is-selected{box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--fg-2)}
+.swatch.orange{--c:var(--chief)}.swatch.violet{--c:var(--growth)}.swatch.green{--c:var(--engineer)}.swatch.blue{--c:var(--team)}
+.form-note{display:flex;align-items:center;gap:5px;margin-top:10px;font-size:9px;line-height:1.5;color:var(--meta)}
+.form-note .icon{width:11px;height:11px}
+.teach-bot{display:flex;align-items:center;gap:9px;padding:9px 10px;border:1px solid var(--border);border-radius:7px;background:var(--surface-2);margin-bottom:13px}
+.teach-bot select{flex:1;height:28px;border:0;background:transparent;color:var(--fg);font-size:11px;outline:none}
+.teach-bot .avatar{width:26px;height:26px;font-size:13px}
+.steps-head{display:flex;align-items:center;justify-content:space-between;margin:16px 0 7px}
+.steps-title{font-size:10px;color:var(--muted)}
+.steps-title b{font-weight:510;color:var(--fg-2)}
+.step-list{display:flex;flex-direction:column;gap:5px}
+.step-row{display:grid;grid-template-columns:12px 20px minmax(0,1fr) 24px;align-items:center;gap:6px;padding:4px 5px;border:1px solid var(--border-soft);border-radius:6px;background:var(--surface-2)}
+.step-row:hover{border-color:var(--border)}
+.step-grip{color:var(--meta);display:grid;place-items:center}
+.step-grip .icon{width:10px;height:10px}
+.step-num{font-family:var(--font-mono);font-size:8px;color:var(--meta);text-align:center}
+.step-input{height:26px;border:0;background:transparent;outline:none;font-size:10.5px;color:var(--fg-2)}
+.step-remove{width:22px;height:22px;display:grid;place-items:center;border-radius:4px;color:var(--meta)}
+.step-remove:hover{background:var(--danger-soft);color:var(--danger)}
+.add-step{height:28px;margin-top:7px;display:inline-flex;align-items:center;gap:5px;padding:0 5px;border-radius:5px;font-size:9.5px;color:var(--muted)}
+.add-step:hover{background:var(--surface-2);color:var(--fg)}
+.add-step .icon{width:11px;height:11px}
+
+/* ── Toast ────────────────────────────────────────────────────────── */
+.toast{position:fixed;left:50%;bottom:22px;z-index:200;max-width:calc(100vw - 32px);transform:translate(-50%,8px);display:flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid var(--border);border-radius:7px;background:var(--surface-3);box-shadow:0 8px 30px rgba(0,0,0,.4);font-size:10.5px;color:var(--fg-2);opacity:0;pointer-events:none;transition:opacity 150ms var(--ease),transform 150ms var(--ease)}
+.toast.is-visible{opacity:1;transform:translate(-50%,0)}
+.toast .icon{width:12px;height:12px;color:var(--success)}
+
+/* ── Responsive fallbacks ─────────────────────────────────────────── */
+@media(max-width:1220px){
+  .appbar{grid-template-columns:220px minmax(0,1fr) 280px}
+  .chat-view{grid-template-columns:220px minmax(0,1fr) 280px}
+  .command{width:108px}.command span{display:none}
+  .appbar-right{gap:5px}
+}
+@media(max-width:1040px){
+  .appbar{grid-template-columns:220px minmax(0,1fr) auto}
+  .chat-view{grid-template-columns:220px minmax(0,1fr)}
+  .context-panel{display:none}
+  .tasks-shell,.market-shell{padding-inline:24px}
+  .page-stats{display:none}
+}
+@media(max-width:760px){
+  body{overflow:auto}
+  .app{height:auto;min-height:100dvh}
+  .appbar{grid-template-columns:auto minmax(0,1fr) auto;gap:4px;height:52px;position:sticky;top:0}
+  .appbar-left{border-right:0;padding-left:10px;padding-right:0}
+  .brand-sub{display:none}
+  .brand-copy{gap:0}
+  .view-tabs{display:flex;justify-self:center;padding:1px;border-color:transparent;background:transparent}
+  .view-tab{height:28px;padding:0 8px;font-size:10px}
+  .appbar-right{padding-right:8px}
+  .appbar-right .btn{width:28px;padding:0;font-size:0;gap:0}
+  .appbar-right .btn .icon{width:14px;height:14px}
+  .user-avatar{display:none}
+  .command{display:none}
+  .workspace{height:calc(100dvh - 52px)}
+  .chat-view{grid-template-columns:1fr}
+  .rail{display:none}
+  .thread-head{padding:0 14px}
+  .thread-inner,.composer-inner{max-width:100%}
+  .thread-inner{padding:0 14px}
+  .composer{padding:8px 12px 10px}
+  .approval{margin-left:0}
+  .msg-user{max-width:88%}
+  .tasks-shell,.market-shell{padding:22px 14px 36px}
+  .page-head,.market-head{align-items:flex-start;flex-direction:column;gap:14px}
+  .market-search{width:100%}
+  .bot-grid{grid-template-columns:1fr}
+  .task-row{grid-template-columns:28px minmax(0,1fr) auto;gap:9px;padding:11px 4px}
+  .task-state,.task-time{display:none}
+  .task-actions{flex-wrap:wrap}
+  .task-title{white-space:normal}
+  .task-source{white-space:normal}
+  .filter-tabs{overflow-x:auto}
+  .filter-tab{white-space:nowrap}
+  .modal-layer{padding:10px}
+  .form-grid{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+<svg class="icon-sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.2 4.2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
+  <symbol id="i-board" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></symbol>
+  <symbol id="i-tasks" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m3.5 6 1 1 2-2M3.5 12l1 1 2-2M3.5 18l1 1 2-2"/></symbol>
+  <symbol id="i-market" viewBox="0 0 24 24"><path d="M4 9h16l-1-5H5L4 9Z"/><path d="M5 9v11h14V9M9 20v-6h6v6"/><path d="M4 9c0 1.4 1 2.4 2.4 2.4S8.8 10.4 8.8 9c0 1.4 1 2.4 2.4 2.4S13.6 10.4 13.6 9c0 1.4 1 2.4 2.4 2.4S18.4 10.4 18.4 9c0 1.4 1 2.4 2.4 2.4" transform="translate(-1 0)"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></symbol>
+  <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+  <symbol id="i-paperclip" viewBox="0 0 24 24"><path d="m9 12 6-6a3 3 0 0 1 4.2 4.2l-8.1 8.1a5 5 0 0 1-7.1-7.1l8-8"/><path d="m8 14 6-6"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+  <symbol id="i-grip" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></symbol>
+  <symbol id="i-sync" viewBox="0 0 24 24"><path d="M20 7h-5V2"/><path d="M20 7a8 8 0 1 0 1 7"/><path d="M4 17h5v5"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3 1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6L12 3Z"/></symbol>
+</svg>
+
+<div class="app">
+  <header class="appbar" data-od-id="appbar">
+    <div class="appbar-left">
+      <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+      <div class="brand-copy"><span class="brand-name">Deepseek Bot Army</span><span class="brand-sub">Harness</span></div>
+    </div>
+    <nav class="view-tabs" aria-label="主导航" data-od-id="view-tabs">
+      <button class="view-tab is-active" data-view-target="chat" aria-selected="true" data-od-id="tab-chat">对话</button>
+      <button class="view-tab" data-view-target="tasks" aria-selected="false" data-od-id="tab-tasks">任务</button>
+      <button class="view-tab" data-view-target="market" aria-selected="false" data-od-id="tab-market">Marketplace</button>
+    </nav>
+    <div class="appbar-right">
+      <button class="command" id="commandButton" aria-label="搜索 Bot 或群聊"><svg class="icon"><use href="#i-search"/></svg><span>搜索 Bot 或群聊</span><kbd>⌘K</kbd></button>
+      <button class="btn btn-secondary" data-open-modal="new-bot" data-od-id="new-bot-button"><svg class="icon icon-sm"><use href="#i-plus"/></svg>新建 Bot</button>
+      <span class="user-avatar" title="Yuan Lin">YL</span>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <!-- ── Chat ─────────────────────────────────────────────────── -->
+    <section class="view chat-view" id="view-chat" data-od-id="chat-view">
+      <aside class="rail" data-od-id="team-rail">
+        <div class="rail-head">
+          <div class="rail-title-row">
+            <h1 class="rail-title">Bots</h1><span class="rail-count">3</span>
+            <button class="icon-btn" id="newChatButton" title="开始新对话" aria-label="开始新对话"><svg class="icon"><use href="#i-plus"/></svg></button>
+          </div>
+          <label class="rail-search"><svg class="icon icon-sm"><use href="#i-search"/></svg><span class="sr-only">搜索 Bot 或群聊</span><input id="railSearch" type="search" placeholder="搜索 Bot 或群聊" autocomplete="off"><kbd>/</kbd></label>
+        </div>
+        <div class="rail-scroll" id="railScroll">
+          <div class="rail-section" data-rail-section="team">
+            <div class="rail-label">团队 <span>3 位 Bot</span></div>
+            <button class="rail-item is-active" data-chat="growth" data-od-id="rail-growth">
+              <span class="avatar bot-growth is-working" aria-hidden="true">📈</span>
+              <span><span class="rail-name-row"><span class="rail-name">Growth</span></span><span class="rail-role">增长与发布 · Working</span></span>
+              <span class="rail-badges"><span class="working-dot"></span><span class="badge">2</span><span class="badge pending">1</span></span>
+            </button>
+            <button class="rail-item" data-chat="chief" data-od-id="rail-chief">
+              <span class="avatar bot-chief" aria-hidden="true">🧭</span>
+              <span><span class="rail-name-row"><span class="rail-name">Chief of Staff</span></span><span class="rail-role">协调与决策 · 空闲</span></span>
+              <span class="rail-badges"><span class="badge pending">1</span></span>
+            </button>
+            <button class="rail-item" data-chat="engineer" data-od-id="rail-engineer">
+              <span class="avatar bot-engineer" aria-hidden="true">🛠️</span>
+              <span><span class="rail-name-row"><span class="rail-name">Engineer</span></span><span class="rail-role">工程与发布 · 空闲</span></span>
+              <span class="rail-badges"><span class="badge">1</span></span>
+            </button>
+          </div>
+          <div class="rail-section" data-rail-section="groups">
+            <div class="rail-label">群聊 <span>2 个房间</span></div>
+            <button class="rail-item" data-chat="team-room" data-od-id="rail-team-room">
+              <span class="avatar group-avatar" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+              <span><span class="rail-name-row"><span class="rail-name">Team room</span></span><span class="rail-role">3 位 Bot · 2 条未读</span></span>
+              <span class="rail-badges"><span class="badge">2</span></span>
+            </button>
+            <button class="rail-item" data-chat="launch-room" data-od-id="rail-launch-room">
+              <span class="avatar group-avatar" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+              <span><span class="rail-name-row"><span class="rail-name">Launch room</span></span><span class="rail-role">Growth + Engineer · 4 条未读</span></span>
+              <span class="rail-badges"><span class="badge">4</span></span>
+            </button>
+          </div>
+          <div class="rail-empty" id="railEmpty" hidden>没有匹配的 Bot</div>
+        </div>
+        <nav class="rail-foot" aria-label="共享库">
+          <button class="rail-link" data-view-target="market" data-od-id="rail-market"><svg class="icon"><use href="#i-market"/></svg><span>Marketplace</span><span class="foot-count">6</span></button>
+          <button class="rail-link" data-view-target="tasks" data-od-id="rail-tasks"><svg class="icon"><use href="#i-tasks"/></svg><span>Team tasks</span><span class="foot-count">5</span></button>
+          <button class="rail-link" id="skillsButton" data-od-id="rail-skills"><svg class="icon"><use href="#i-zap"/></svg><span>Skills</span><span class="foot-count">12</span></button>
+        </nav>
+      </aside>
+
+      <section class="thread" aria-label="Growth 对话" data-od-id="chat-thread">
+        <header class="thread-head">
+          <div class="thread-id">
+            <span class="avatar bot-growth is-working" id="threadAvatar" aria-hidden="true">📈</span>
+            <div style="min-width:0">
+              <div class="thread-name-row"><span class="thread-name" id="threadName">Growth</span><span class="sync-tag" id="threadTag">共享 Computer</span></div>
+              <div class="thread-status"><span class="status-pulse" id="statusPulse"></span><span id="threadStatus">Working · Digging around</span></div>
+            </div>
+          </div>
+          <div class="thread-actions">
+            <button class="context-chip" data-tab-target="computer" data-od-id="header-computer"><svg class="icon"><use href="#i-monitor"/></svg>Computer</button>
+            <button class="icon-btn" title="更多操作" aria-label="更多操作"><svg class="icon"><use href="#i-more"/></svg></button>
+          </div>
+        </header>
+
+        <div class="thread-scroll" id="threadScroll">
+          <div class="thread-inner" id="threadMessages">
+            <div class="date-line">今天 · 10:42</div>
+            <div class="system-note"><span><svg class="icon"><use href="#i-sync"/></svg>Dispatched via Workspace Hub — <b>Launch checklist 校验</b></span></div>
+            <article class="msg-user bot-growth">
+              <div class="bubble-user">Launch 前帮我过一遍发布清单，特别看一下权限回收和回滚负责人有没有漏。</div>
+              <div class="msg-meta">你 · 10:42</div>
+            </article>
+            <article class="msg-bot">
+              <span class="avatar bot-growth is-working" aria-hidden="true">📈</span>
+              <div>
+                <div class="msg-by">Growth <time>10:43</time></div>
+                <div class="msg-copy">
+                  <p>已经打开 <code>launch-checklist.md</code>，正在对照上次发布记录核对。权限回收这一项上次就漏了，我先补上。<span class="caret" aria-hidden="true"></span></p>
+                  <div class="activity-line"><span class="activity-bars" aria-hidden="true"><i></i><i></i><i></i></span><span><b id="activityVerb">Digging around</b> · 已读取 4 个文件</span></div>
+                </div>
+              </div>
+            </article>
+            <article class="approval" id="approvalCard" data-od-id="approval-card-launch">
+              <div class="approval-head">
+                <span class="status-chip" id="approvalChip"><span class="dot"></span>Ready for review</span>
+                <span class="sync-tag"><svg class="icon"><use href="#i-board"/></svg>已同步看板</span>
+              </div>
+              <div class="approval-body">
+                <h3 class="approval-title">Launch checklist 已补齐，等你确认</h3>
+                <p class="approval-desc">补齐权限回收和回滚负责人，关闭了 2 条过期提醒。文件已写回交付目录。</p>
+                <ul class="approval-checks">
+                  <li><svg class="icon"><use href="#i-check"/></svg><span>权限回收：补上 admin token 失效步骤</span></li>
+                  <li><svg class="icon"><use href="#i-check"/></svg><span>回滚负责人：Engineer · 发布后 2 小时内待命</span></li>
+                  <li><svg class="icon"><use href="#i-check"/></svg><span>已同步至 Workspace Hub「Launch」看板</span></li>
+                </ul>
+              </div>
+              <div class="approval-actions" id="approvalActions">
+                <button class="btn btn-primary btn-sm" data-approve data-od-id="approve-launch">通过</button>
+                <button class="btn btn-secondary btn-sm" data-revise data-od-id="revise-launch">要求修改</button>
+                <button class="btn btn-ghost btn-sm dismiss" data-dismiss data-od-id="dismiss-launch">忽略</button>
+              </div>
+              <div class="revision-box" id="revisionBox" hidden>
+                <label class="sr-only" for="revisionText">修改要求</label>
+                <textarea id="revisionText" placeholder="写清楚要改哪一项，Growth 会回到 Computer 继续处理。"></textarea>
+                <div class="revision-actions"><button class="btn btn-ghost btn-sm" id="revisionCancel">取消</button><button class="btn btn-secondary btn-sm" id="revisionSubmit">发回修改</button></div>
+              </div>
+            </article>
+          </div>
+
+          <div class="empty-state bot-growth" id="emptyState" hidden>
+            <div class="empty-orbit"><span class="avatar bot-growth" id="emptyAvatar" aria-hidden="true">📈</span></div>
+            <h2 id="emptyTitle">把要做的事交给 <span id="emptyName">Growth</span>，像给同事发消息一样。</h2>
+            <div class="starter-chips" id="starterChips">
+              <button class="starter-chip" data-starter="检查 launch checklist 是否齐全">检查 launch checklist 是否齐全</button>
+              <button class="starter-chip" data-starter="整理本周竞品价格变化">整理本周竞品价格变化</button>
+              <button class="starter-chip" data-starter="起草发布后的客户邮件">起草发布后的客户邮件</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="composer">
+          <div class="composer-inner">
+            <div class="composer-box">
+              <label class="sr-only" for="composerInput">给 Bot 派活</label>
+              <textarea id="composerInput" rows="1" placeholder="给 Growth 派活…"></textarea>
+              <div class="composer-tools">
+                <div class="composer-left">
+                  <button class="tool-btn" title="添加文件" aria-label="添加文件"><svg class="icon"><use href="#i-paperclip"/></svg></button>
+                  <button class="tool-btn" id="composerContext" title="选择上下文"><svg class="icon"><use href="#i-monitor"/></svg>Computer</button>
+                  <span class="composer-hint">Enter 发送 · Shift + Enter 换行</span>
+                </div>
+                <button class="send-btn" id="sendButton" aria-label="发送"><svg class="icon"><use href="#i-arrow-up"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="context-panel" data-od-id="context-panel">
+        <div class="context-tabs" role="tablist" aria-label="上下文面板">
+          <button class="context-tab" role="tab" data-tab-target="tasks" aria-selected="false">任务<span class="tab-count">1</span></button>
+          <button class="context-tab" role="tab" data-tab-target="memory" aria-selected="false">记忆</button>
+          <button class="context-tab" role="tab" data-tab-target="routines" aria-selected="false">Routine</button>
+          <button class="context-tab is-active" role="tab" data-tab-target="computer" aria-selected="true">Computer</button>
+        </div>
+        <div class="context-body">
+          <div class="tab-panel" data-panel="tasks" hidden>
+            <div class="context-panel-head"><div><div class="panel-title">当前任务</div><p class="panel-sub">审批与执行状态会同步到这里。</p></div><button class="icon-btn" data-go-tasks aria-label="查看全部任务"><svg class="icon"><use href="#i-tasks"/></svg></button></div>
+            <div class="mini-task"><div class="mini-task-title">Launch checklist 已补齐</div><div class="mini-task-meta"><span class="status-chip"><span class="dot"></span>Ready for review</span></div><div class="mini-task-foot"><span class="sync-tag"><svg class="icon"><use href="#i-board"/></svg>已同步看板</span><button class="btn btn-secondary btn-sm" data-go-tasks>去审批</button></div></div>
+            <div class="mini-task"><div class="mini-task-title">发布后 48 小时数据回看</div><div class="mini-task-meta"><span class="state-dot working"></span>Growth · 排队中</div></div>
+          </div>
+
+          <div class="tab-panel" data-panel="memory" hidden>
+            <div class="context-panel-head"><div><div class="panel-title">Growth 的记忆</div><p class="panel-sub">Bot 会在每次任务后更新可复用的上下文。</p></div></div>
+            <div class="memory-note"><svg class="icon"><use href="#i-check"/></svg><span>Updated memory for Growth</span></div>
+            <div class="memory-item"><p>Launch 复盘：发布后 48 小时内先看激活率，再看等待名单转化。</p><div class="memory-meta"><span>来源 · Launch room</span><span>4 分钟前</span></div></div>
+            <div class="memory-item"><p>ICP：B2B SaaS，20–80 人团队，正在从 PLG 转向销售驱动。</p><div class="memory-meta"><span>来源 · 你</span><span>2 小时前</span></div></div>
+            <div class="memory-item"><p>品牌语气：直接、少形容词。对外邮件不超过 120 字。</p><div class="memory-meta"><span>来源 · Team room</span><span>昨天</span></div></div>
+            <div class="memory-item"><p>发布清单：权限回收与回滚负责人是必检项，不接受“待定”。</p><div class="memory-meta"><span>来源 · Growth</span><span>昨天</span></div></div>
+          </div>
+
+          <div class="tab-panel" data-panel="routines" hidden>
+            <div class="context-panel-head"><div><div class="panel-title">Routine</div><p class="panel-sub">教一次，之后按同样的步骤执行。</p></div><button class="btn btn-secondary btn-sm" data-open-modal="teach-task"><svg class="icon icon-sm"><use href="#i-plus"/></svg>新建</button></div>
+            <div class="routine"><div><div class="routine-title">每周发布检查</div><div class="routine-meta"><span>每次发布前</span><span>·</span><span>运行 12 次</span></div><div class="routine-actions" style="margin-top:6px"><button class="run-btn" data-run-routine>立即运行</button></div></div><button class="switch is-on" role="switch" aria-checked="true" aria-label="启用每周发布检查"></button></div>
+            <div class="routine"><div><div class="routine-title">竞品价格扫描</div><div class="routine-meta"><span>每周一 09:00</span><span>·</span><span>运行 8 次</span></div><div class="routine-actions" style="margin-top:6px"><button class="run-btn" data-run-routine>立即运行</button></div></div><button class="switch is-on" role="switch" aria-checked="true" aria-label="启用竞品价格扫描"></button></div>
+            <div class="routine"><div><div class="routine-title">周一团队简报</div><div class="routine-meta"><span>每周一 08:30</span><span>·</span><span>运行 4 次</span></div><div class="routine-actions" style="margin-top:6px"><button class="run-btn" data-run-routine>立即运行</button></div></div><button class="switch" role="switch" aria-checked="false" aria-label="启用周一团队简报"></button></div>
+          </div>
+
+          <div class="tab-panel" data-panel="computer">
+            <div class="context-panel-head"><div><div class="panel-kicker">Shared computer</div><div class="panel-title">Growth 的工作区</div></div><span class="status-chip" style="background:var(--success-soft);color:var(--success)"><span class="dot"></span>在线</span></div>
+            <div class="computer-state"><span class="status-pulse"></span>已连接 <span class="mono">2m ago</span></div>
+            <div class="panel-section">
+              <div class="section-head"><span class="section-label">路径</span><span class="section-meta">2 个</span></div>
+              <div class="path-card"><div class="path-head"><span class="path-label">交付目录</span><button class="copy-btn" data-copy="~/deepseek-bot-army/output/growth" aria-label="复制交付目录"><svg class="icon"><use href="#i-copy"/></svg></button></div><div class="path-value">~/deepseek-bot-army/output/growth</div></div>
+              <div class="path-card"><div class="path-head"><span class="path-label">项目工作区</span><button class="copy-btn" data-copy="~/deepseek-bot-army/workspaces/growth" aria-label="复制项目工作区"><svg class="icon"><use href="#i-copy"/></svg></button></div><div class="path-value">~/deepseek-bot-army/workspaces/growth</div></div>
+            </div>
+            <div class="panel-section">
+              <div class="section-head"><span class="section-label">文件</span><span class="section-meta">5 个</span></div>
+              <div class="file-list">
+                <button class="file-row"><span class="file-type">MD</span><span class="file-name">launch-checklist.md</span><span class="file-meta">4m</span></button>
+                <button class="file-row"><span class="file-type">MD</span><span class="file-name">rollout-notes.md</span><span class="file-meta">12m</span></button>
+                <button class="file-row"><span class="file-type">CSV</span><span class="file-name">waitlist-segments.csv</span><span class="file-meta">1h</span></button>
+                <button class="file-row"><span class="file-type">PNG</span><span class="file-name">launch-header.png</span><span class="file-meta">2h</span></button>
+                <button class="file-row"><span class="file-type">DIR</span><span class="file-name">archive/</span><span class="file-meta">12</span></button>
+              </div>
+            </div>
+            <div class="panel-section"><button class="btn btn-secondary" style="width:100%" data-open-modal="teach-task"><svg class="icon icon-sm"><use href="#i-spark"/></svg>把这项工作教成 Routine</button></div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ── Tasks ────────────────────────────────────────────────── -->
+    <section class="view tasks-view" id="view-tasks" hidden data-od-id="tasks-view">
+      <div class="tasks-shell">
+        <header class="page-head">
+          <div><div class="page-eyebrow">Team tasks · 跨聊天</div><h1 class="page-title">团队任务</h1><p class="page-sub">所有 Bot 的审批、执行和已完成事项都在这里。任务卡与 Workspace Hub 看板双向同步。</p></div>
+          <div class="page-stats"><span class="page-stat"><b id="statReview">3</b>待审批</span><span class="page-stat"><b id="statWorking">2</b>执行中</span><span class="page-stat"><b id="statDone">3</b>已完成</span></div>
+        </header>
+        <div class="task-toolbar">
+          <div class="filter-tabs" role="tablist" aria-label="任务筛选">
+            <button class="filter-tab is-active" data-filter="review" role="tab" aria-selected="true">待审批<span class="filter-count" data-count="review">3</span></button>
+            <button class="filter-tab" data-filter="working" role="tab" aria-selected="false">执行中<span class="filter-count" data-count="working">2</span></button>
+            <button class="filter-tab" data-filter="done" role="tab" aria-selected="false">已完成<span class="filter-count" data-count="done">3</span></button>
+          </div>
+          <span class="toolbar-meta">按最近更新排序</span>
+        </div>
+        <div class="task-list" id="taskList">
+          <article class="task-row" data-status="review" data-od-id="task-launch-review">
+            <span class="avatar bot-growth" aria-hidden="true">📈</span>
+            <div class="task-main"><div class="task-title-line"><span class="task-title">Launch checklist 已补齐，等待确认</span><span class="sync-tag"><svg class="icon"><use href="#i-board"/></svg>已同步看板</span></div><div class="task-source"><b>Growth</b><span class="source-sep"></span>来自 Launch room<span class="source-sep"></span>10:43</div></div>
+            <span class="task-state"><span class="state-dot review"></span>Ready for review</span>
+            <span class="task-time">4 分钟前</span>
+            <div class="task-actions"><button class="btn btn-secondary btn-sm" data-task-approve>通过</button><button class="btn btn-ghost btn-sm" data-task-revise>修改</button><button class="icon-btn" data-task-dismiss title="忽略" aria-label="忽略任务"><svg class="icon"><use href="#i-close"/></svg></button></div>
+          </article>
+          <article class="task-row" data-status="review" data-od-id="task-api-review">
+            <span class="avatar bot-engineer" aria-hidden="true">🛠️</span>
+            <div class="task-main"><div class="task-title-line"><span class="task-title">API rate limit 回归报告</span><span class="sync-tag"><svg class="icon"><use href="#i-board"/></svg>已同步看板</span></div><div class="task-source"><b>Engineer</b><span class="source-sep"></span>来自 Growth 的私聊<span class="source-sep"></span>10:18</div></div>
+            <span class="task-state"><span class="state-dot review"></span>Ready for review</span>
+            <span class="task-time">18 分钟前</span>
+            <div class="task-actions"><button class="btn btn-secondary btn-sm" data-task-approve>通过</button><button class="btn btn-ghost btn-sm" data-task-revise>修改</button><button class="icon-btn" data-task-dismiss title="忽略" aria-label="忽略任务"><svg class="icon"><use href="#i-close"/></svg></button></div>
+          </article>
+          <article class="task-row" data-status="review" data-od-id="task-weekly-review">
+            <span class="avatar bot-chief" aria-hidden="true">🧭</span>
+            <div class="task-main"><div class="task-title-line"><span class="task-title">周会纪要与负责人分配</span></div><div class="task-source"><b>Chief of Staff</b><span class="source-sep"></span>来自 Team room<span class="source-sep"></span>09:54</div></div>
+            <span class="task-state"><span class="state-dot review"></span>Ready for review</span>
+            <span class="task-time">32 分钟前</span>
+            <div class="task-actions"><button class="btn btn-secondary btn-sm" data-task-approve>通过</button><button class="btn btn-ghost btn-sm" data-task-revise>修改</button><button class="icon-btn" data-task-dismiss title="忽略" aria-label="忽略任务"><svg class="icon"><use href="#i-close"/></svg></button></div>
+          </article>
+          <article class="task-row" data-status="working" data-od-id="task-pricing-scan">
+            <span class="avatar bot-growth" aria-hidden="true">📈</span>
+            <div class="task-main"><div class="task-title-line"><span class="task-title">竞品定价页扫描</span></div><div class="task-source"><b>Growth</b><span class="source-sep"></span>来自 Launch room<span class="source-sep"></span>10:31</div></div>
+            <span class="task-state"><span class="state-dot working"></span>Searching the web</span>
+            <span class="task-time">12 分钟前</span>
+            <div class="task-actions"><button class="btn btn-ghost btn-sm" data-go-chat>查看</button></div>
+          </article>
+          <article class="task-row" data-status="working" data-od-id="task-webhook">
+            <span class="avatar bot-engineer" aria-hidden="true">🛠️</span>
+            <div class="task-main"><div class="task-title-line"><span class="task-title">修复 webhook 重试队列</span><span class="sync-tag"><svg class="icon"><use href="#i-board"/></svg>已同步看板</span></div><div class="task-source"><b>Engineer</b><span class="source-sep"></span>来自 Team room<span class="source-sep"></span>10:36</div></div>
+            <span class="task-state"><span class="state-dot working"></span>Writing files</span>
+            <span class="task-time">6 分钟前</span>
+            <div class="task-actions"><button class="btn btn-ghost btn-sm" data-go-chat>查看</button></div>
+          </article>
+          <article class="task-row" data-status="done" data-od-id="task-hiring-done">
+            <span class="avatar bot-chief" aria-hidden="true">🧭</span>
+            <div class="task-main"><div class="task-title-line"><span class="task-title">整理 Q3 招聘优先级</span></div><div class="task-source"><b>Chief of Staff</b><span class="source-sep"></span>来自 Team room<span class="source-sep"></span>09:20</div></div>
+            <span class="task-state"><span class="state-dot done"></span>已完成</span>
+            <span class="task-time">今天 09:20</span>
+            <div class="task-actions"><span class="done-label"><svg class="icon"><use href="#i-check"/></svg>已通过</span></div>
+          </article>
+          <article class="task-row" data-status="done" data-od-id="task-icp-done">
+            <span class="avatar bot-growth" aria-hidden="true">📈</span>
+            <div class="task-main"><div class="task-title-line"><span class="task-title">更新 ICP 分层与等待名单</span></div><div class="task-source"><b>Growth</b><span class="source-sep"></span>来自 Growth 的私聊<span class="source-sep"></span>昨天</div></div>
+            <span class="task-state"><span class="state-dot done"></span>已完成</span>
+            <span class="task-time">昨天 17:42</span>
+            <div class="task-actions"><span class="done-label"><svg class="icon"><use href="#i-check"/></svg>已通过</span></div>
+          </article>
+          <article class="task-row" data-status="done" data-od-id="task-db-done">
+            <span class="avatar bot-engineer" aria-hidden="true">🛠️</span>
+            <div class="task-main"><div class="task-title-line"><span class="task-title">迁移 staging 数据库</span><span class="sync-tag"><svg class="icon"><use href="#i-board"/></svg>已同步看板</span></div><div class="task-source"><b>Engineer</b><span class="source-sep"></span>来自 Launch room<span class="source-sep"></span>昨天</div></div>
+            <span class="task-state"><span class="state-dot done"></span>已完成</span>
+            <span class="task-time">昨天 15:08</span>
+            <div class="task-actions"><span class="done-label"><svg class="icon"><use href="#i-check"/></svg>已通过</span></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Marketplace ──────────────────────────────────────────── -->
+    <section class="view market-view" id="view-market" hidden data-od-id="marketplace-view">
+      <div class="market-shell">
+        <header class="market-head">
+          <div><div class="page-eyebrow">Marketplace · 可复用 Bot 模板</div><h1 class="page-title">给团队加一位新同事</h1><p class="page-sub">从模板开始，或让团队里已有的 Bot 共享它的工作方式。</p></div>
+          <label class="market-search"><svg class="icon"><use href="#i-search"/></svg><span class="sr-only">搜索 Bot 模板</span><input type="search" id="marketSearch" placeholder="搜索 Bot、角色或能力" autocomplete="off"></label>
+        </header>
+        <div class="market-cats" role="tablist" aria-label="分类">
+          <button class="cat-chip is-active" data-cat-filter="all" role="tab" aria-selected="true">全部</button>
+          <button class="cat-chip" data-cat-filter="marketing" role="tab" aria-selected="false">市场与增长</button>
+          <button class="cat-chip" data-cat-filter="engineering" role="tab" aria-selected="false">工程</button>
+          <button class="cat-chip" data-cat-filter="ops" role="tab" aria-selected="false">运营</button>
+          <button class="cat-chip" data-cat-filter="research" role="tab" aria-selected="false">研究</button>
+          <button class="cat-chip" data-cat-filter="content" role="tab" aria-selected="false">内容</button>
+        </div>
+        <div class="bot-grid" id="botGrid">
+          <article class="bot-card" data-cat="marketing" data-search="hermes growth 增长 发布 竞品" data-od-id="market-card-hermes">
+            <div class="bot-card-head"><span class="avatar bot-growth" aria-hidden="true">📈</span><div><div class="bot-card-name">Hermes</div><div class="bot-card-role">Growth marketing</div></div><button class="btn btn-secondary" data-add-bot>Add</button></div>
+            <p class="bot-desc">负责发布节奏、渠道实验和竞品跟踪。会把每次实验写回 Memory。</p>
+            <div class="bot-card-foot"><span class="bot-usage">适合 Growth 团队</span><span class="bot-usage">v1.4</span></div>
+          </article>
+          <article class="bot-card" data-cat="engineering" data-search="forge engineer 工程 代码 回归 发布" data-od-id="market-card-forge">
+            <div class="bot-card-head"><span class="avatar bot-engineer" aria-hidden="true">🛠️</span><div><div class="bot-card-name">Forge</div><div class="bot-card-role">Engineering</div></div><span class="installed"><svg class="icon icon-sm"><use href="#i-check"/></svg>已添加</span></div>
+            <p class="bot-desc">处理代码修复、回归测试和发布前检查，在共享 Computer 上直接改文件。</p>
+            <div class="bot-card-foot"><span class="bot-usage">已由 Engineer 使用</span><span class="bot-usage">v2.1</span></div>
+          </article>
+          <article class="bot-card" data-cat="ops" data-search="ledger finance 财务 账单 成本 运营" data-od-id="market-card-ledger">
+            <div class="bot-card-head"><span class="avatar bot-chief" aria-hidden="true">🧾</span><div><div class="bot-card-name">Ledger</div><div class="bot-card-role">Finance ops</div></div><button class="btn btn-secondary" data-add-bot>Add</button></div>
+            <p class="bot-desc">核对账单、订阅与月度成本异常，按异常级别整理成可审批的任务。</p>
+            <div class="bot-card-foot"><span class="bot-usage">适合财务与运营</span><span class="bot-usage">v1.2</span></div>
+          </article>
+          <article class="bot-card" data-cat="research" data-search="scout research 研究 市场 信号 简报" data-od-id="market-card-scout">
+            <div class="bot-card-head"><span class="avatar bot-team" aria-hidden="true">🔭</span><div><div class="bot-card-name">Scout</div><div class="bot-card-role">Research</div></div><button class="btn btn-secondary" data-add-bot>Add</button></div>
+            <p class="bot-desc">收集市场信号与用户反馈，整理成有来源、可直接决策的研究简报。</p>
+            <div class="bot-card-foot"><span class="bot-usage">适合产品与战略</span><span class="bot-usage">v1.6</span></div>
+          </article>
+          <article class="bot-card" data-cat="content" data-search="quill content 内容 写作 发布 邮件" data-od-id="market-card-quill">
+            <div class="bot-card-head"><span class="avatar bot-growth" aria-hidden="true">✍️</span><div><div class="bot-card-name">Quill</div><div class="bot-card-role">Content</div></div><button class="btn btn-secondary" data-add-bot>Add</button></div>
+            <p class="bot-desc">把产品更新写成发布说明、客户邮件和 changelog，保持团队语气一致。</p>
+            <div class="bot-card-foot"><span class="bot-usage">适合市场与支持</span><span class="bot-usage">v1.3</span></div>
+          </article>
+          <article class="bot-card" data-cat="ops" data-search="keeper team ops 运营 日程 交接 知识库" data-od-id="market-card-keeper">
+            <div class="bot-card-head"><span class="avatar bot-chief" aria-hidden="true">🗂️</span><div><div class="bot-card-name">Keeper</div><div class="bot-card-role">Team ops</div></div><button class="btn btn-secondary" data-add-bot>Add</button></div>
+            <p class="bot-desc">维护团队日程、交接和知识库，让群聊里的决定不会在两天后消失。</p>
+            <div class="bot-card-foot"><span class="bot-usage">适合全员团队</span><span class="bot-usage">v1.1</span></div>
+          </article>
+          <div class="market-empty" id="marketEmpty" hidden>没有匹配的 Bot 模板，换个关键词或分类。</div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ── New Bot modal ─────────────────────────────────────────────── -->
+<div class="modal-layer" id="modal-new-bot" aria-hidden="true" data-od-id="modal-new-bot">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="newBotTitle">
+    <div class="modal-head"><div><div class="modal-kicker">New Bot</div><h2 class="modal-title" id="newBotTitle">新建一位 Bot 同事</h2><p class="modal-sub">给它一个清楚的角色。名字和标签会出现在团队 rail 里。</p></div><button class="modal-close" data-close-modal aria-label="关闭"><svg class="icon"><use href="#i-close"/></svg></button></div>
+    <form id="newBotForm">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-field"><label class="form-label" for="botName">Name</label><input class="input" id="botName" value="Scout" required></div>
+          <div class="form-field"><label class="form-label" for="botLabel">Label</label><input class="input" id="botLabel" value="Research"></div>
+          <div class="form-field full"><label class="form-label" for="botDesc">Description <em>· 它负责什么、怎么工作</em></label><textarea class="textarea" id="botDesc">收集市场信号和用户反馈，整理成有来源的研究简报。每次任务后更新 Memory。</textarea></div>
+          <div class="form-field"><label class="form-label" for="botWorkspace">Workspace</label><select class="select" id="botWorkspace"><option>Growth</option><option>Launch</option><option>全团队</option></select></div>
+          <div class="form-field"><label class="form-label">头像</label><div class="avatar-picker" role="group" aria-label="选择头像"><button type="button" class="avatar-choice" data-avatar="🧭" aria-label="指南针">🧭</button><button type="button" class="avatar-choice" data-avatar="📈" aria-label="增长">📈</button><button type="button" class="avatar-choice" data-avatar="🛠️" aria-label="工程">🛠️</button><button type="button" class="avatar-choice is-selected" data-avatar="🔭" aria-label="研究">🔭</button><button type="button" class="avatar-choice" data-avatar="✍️" aria-label="内容">✍️</button><button type="button" class="avatar-choice" data-avatar="🗂️" aria-label="运营">🗂️</button></div></div>
+          <div class="form-field full"><label class="form-label">强调色 <em>· 用于头像、用户气泡和 working 状态</em></label><div class="accent-picker" role="group" aria-label="选择强调色"><button type="button" class="swatch orange is-selected" data-accent="orange" aria-label="橙色"></button><button type="button" class="swatch violet" data-accent="violet" aria-label="紫色"></button><button type="button" class="swatch green" data-accent="green" aria-label="绿色"></button><button type="button" class="swatch blue" data-accent="blue" aria-label="蓝色"></button></div></div>
+        </div>
+        <div class="form-note"><svg class="icon"><use href="#i-monitor"/></svg>创建后会获得一个共享 Computer 工作区，默认在交付目录等待审批。</div>
+      </div>
+      <div class="modal-foot"><button type="button" class="btn btn-ghost" data-close-modal>取消</button><button type="submit" class="btn btn-primary">创建 Bot</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Teach a task modal ────────────────────────────────────────── -->
+<div class="modal-layer" id="modal-teach-task" aria-hidden="true" data-od-id="modal-teach-task">
+  <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="teachTitle">
+    <div class="modal-head"><div><div class="modal-kicker">Teach a task</div><h2 class="modal-title" id="teachTitle">教一次，以后照着做</h2><p class="modal-sub">把步骤写清楚，Bot 会在共享 Computer 上按顺序执行。</p></div><button class="modal-close" data-close-modal aria-label="关闭"><svg class="icon"><use href="#i-close"/></svg></button></div>
+    <form id="teachForm">
+      <div class="modal-body">
+        <div class="teach-bot"><span class="avatar bot-growth" aria-hidden="true">📈</span><div style="flex:1"><label class="form-label" for="teachBot">选一位 Bot</label><select id="teachBot" style="margin-top:2px"><option>Growth · 增长与发布</option><option>Chief of Staff · 协调与决策</option><option>Engineer · 工程与发布</option></select></div></div>
+        <div class="form-field"><label class="form-label" for="taskGoal">目标 <em>· 用一句同事能听懂的话</em></label><input class="input" id="taskGoal" value="每次发布前检查 launch checklist，把缺失项补齐后再交给我"></div>
+        <div class="steps-head"><span class="steps-title">步骤 <b id="stepCount">3 个</b></span><span class="section-meta">按顺序执行</span></div>
+        <div class="step-list" id="stepList">
+          <div class="step-row"><span class="step-grip"><svg class="icon"><use href="#i-grip"/></svg></span><span class="step-num">1</span><input class="step-input" value="打开项目工作区的 launch-checklist.md" aria-label="步骤 1"><button type="button" class="step-remove" aria-label="删除步骤"><svg class="icon"><use href="#i-close"/></svg></button></div>
+          <div class="step-row"><span class="step-grip"><svg class="icon"><use href="#i-grip"/></svg></span><span class="step-num">2</span><input class="step-input" value="对照上次发布记录逐项核对，标出缺失项" aria-label="步骤 2"><button type="button" class="step-remove" aria-label="删除步骤"><svg class="icon"><use href="#i-close"/></svg></button></div>
+          <div class="step-row"><span class="step-grip"><svg class="icon"><use href="#i-grip"/></svg></span><span class="step-num">3</span><input class="step-input" value="把负责人和回滚步骤写回文件，发回审批" aria-label="步骤 3"><button type="button" class="step-remove" aria-label="删除步骤"><svg class="icon"><use href="#i-close"/></svg></button></div>
+        </div>
+        <button type="button" class="add-step" id="addStep"><svg class="icon"><use href="#i-plus"/></svg>添加步骤</button>
+        <div class="form-note"><svg class="icon"><use href="#i-sync"/></svg>保存后可在 Routine 面板启停，也可以随时立即运行一次。</div>
+      </div>
+      <div class="modal-foot"><button type="button" class="btn btn-ghost" data-close-modal>取消</button><button type="submit" class="btn btn-primary">保存为 Routine</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><svg class="icon"><use href="#i-check"/></svg><span id="toastText"></span></div>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+  const chats = {
+    growth: { name: 'Growth', role: '增长与发布', emoji: '📈', color: 'bot-growth', working: true, status: 'Working · Digging around', message: '给 Growth 派活…', empty: '把要做的事交给 Growth，像给同事发消息一样。', starters: ['检查 launch checklist 是否齐全', '整理本周竞品价格变化', '起草发布后的客户邮件'], hasThread: true },
+    chief: { name: 'Chief of Staff', role: '协调与决策', emoji: '🧭', color: 'bot-chief', working: false, status: '空闲 · 可接新任务', message: '给 Chief of Staff 派活…', empty: '把要做的事交给 Chief of Staff，像给同事发消息一样。', starters: ['整理本周团队优先级', '把周会纪要分给负责人', '检查 Launch room 的待办'], hasThread: false },
+    engineer: { name: 'Engineer', role: '工程与发布', emoji: '🛠️', color: 'bot-engineer', working: false, status: '空闲 · 上次活动 12 分钟前', message: '给 Engineer 派活…', empty: '把要做的事交给 Engineer，像给同事发消息一样。', starters: ['检查 webhook 重试队列', '跑一遍发布前回归', '整理 staging 迁移记录'], hasThread: false },
+    'team-room': { name: 'Team room', role: '3 位 Bot · 共享线程', emoji: '#', color: 'bot-team', working: false, status: '3 位成员 · 2 条未读', message: '在 Team room 里发消息…', empty: '把工作交给整个团队，像在群里 @ 同事一样。', starters: ['让团队过一遍本周优先级', '同步 Launch 的负责人', '整理今天的决策记录'], hasThread: false },
+    'launch-room': { name: 'Launch room', role: 'Growth + Engineer · 发布协作', emoji: '#', color: 'bot-team', working: false, status: '2 位成员 · 4 条未读', message: '在 Launch room 里发消息…', empty: '把发布相关的活儿交给 Launch room，Growth 和 Engineer 会一起接。', starters: ['核对发布清单', '准备回滚方案', '写一条发布后回看任务'], hasThread: false }
+  };
+  let currentChat = 'growth';
+  let currentFilter = 'review';
+  let currentCat = 'all';
+  let lastFocus = null;
+  let toastTimer = null;
+  let verbIndex = 0;
+  const verbs = ['Digging around', 'Looking through files', 'Writing files', 'Searching the web'];
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function toast(message) {
+    const el = $('#toast');
+    $('#toastText').textContent = message;
+    el.classList.add('is-visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('is-visible'), 2400);
+  }
+
+  function setView(name) {
+    $$('.view').forEach(v => v.hidden = v.id !== `view-${name}`);
+    $$('.view-tab').forEach(t => {
+      const active = t.dataset.viewTarget === name;
+      t.classList.toggle('is-active', active);
+      t.setAttribute('aria-selected', String(active));
+    });
+    if (name === 'chat') $('#threadScroll').scrollTop = 0;
+  }
+
+  $$('[data-view-target]').forEach(btn => btn.addEventListener('click', () => setView(btn.dataset.viewTarget)));
+
+  function renderChat(key) {
+    const data = chats[key];
+    if (!data) return;
+    currentChat = key;
+    $$('.rail-item').forEach(item => item.classList.toggle('is-active', item.dataset.chat === key));
+    $('#threadName').textContent = data.name;
+    $('#threadStatus').textContent = data.status;
+    $('#threadAvatar').textContent = data.emoji;
+    $('#threadAvatar').className = `avatar ${data.color}${data.working ? ' is-working' : ''}`;
+    $('#statusPulse').hidden = !data.working;
+    $('#threadTag').hidden = key.includes('room');
+    if (data.hasThread) {
+      $('#threadMessages').hidden = false;
+      $('#emptyState').hidden = true;
+    } else {
+      $('#threadMessages').hidden = true;
+      $('#emptyState').hidden = false;
+      $('#emptyName').textContent = data.name;
+      $('#emptyState').className = `empty-state ${data.color}`;
+      $('#emptyTitle').innerHTML = `把要做的事交给 <span>${data.name}</span>，像给同事发消息一样。`;
+      $('#emptyAvatar').textContent = data.emoji;
+      $('#emptyAvatar').className = `avatar ${data.color}`;
+      $('#starterChips').innerHTML = data.starters.map(s => `<button class="starter-chip" data-starter="${s}">${s}</button>`).join('');
+      bindStarters();
+    }
+    $('#composerInput').placeholder = data.message;
+    $('#threadScroll').scrollTop = 0;
+  }
+
+  $$('.rail-item[data-chat]').forEach(item => item.addEventListener('click', () => renderChat(item.dataset.chat)));
+
+  function bindStarters() {
+    $$('#starterChips .starter-chip').forEach(chip => chip.addEventListener('click', () => {
+      $('#composerInput').value = chip.dataset.starter;
+      $('#composerInput').focus();
+    }));
+  }
+  bindStarters();
+
+  $('#newChatButton').addEventListener('click', () => {
+    renderChat('chief');
+    $('#composerInput').focus();
+    toast('已打开 Chief of Staff 的新对话');
+  });
+
+  $('#railSearch').addEventListener('input', e => {
+    const q = e.target.value.trim().toLowerCase();
+    let total = 0;
+    $$('.rail-item').forEach(item => {
+      const match = item.textContent.toLowerCase().includes(q);
+      item.hidden = !match;
+      if (match) total++;
+    });
+    $$('[data-rail-section]').forEach(section => {
+      section.hidden = !$$('.rail-item', section).some(item => !item.hidden);
+    });
+    $('#railEmpty').hidden = total > 0;
+  });
+
+  $('#commandButton').addEventListener('click', () => {
+    setView('chat');
+    $('#railSearch').focus();
+  });
+  $('#skillsButton').addEventListener('click', () => toast('Skills 共享库 · 12 个团队技能'));
+
+  // Context tabs
+  function setTab(name) {
+    $$('.context-tab').forEach(t => {
+      const active = t.dataset.tabTarget === name;
+      t.classList.toggle('is-active', active);
+      t.setAttribute('aria-selected', String(active));
+    });
+    $$('.tab-panel').forEach(p => p.hidden = p.dataset.panel !== name);
+  }
+  $$('.context-tab').forEach(tab => tab.addEventListener('click', () => setTab(tab.dataset.tabTarget)));
+  $$('[data-tab-target]').forEach(el => {
+    if (el.classList.contains('context-tab')) return;
+    el.addEventListener('click', () => setTab(el.dataset.tabTarget));
+  });
+  $$('[data-go-tasks]').forEach(el => el.addEventListener('click', () => setView('tasks')));
+
+  $$('.copy-btn').forEach(btn => btn.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(btn.dataset.copy); toast('路径已复制到剪贴板'); }
+    catch { toast('复制失败，请手动选择路径'); }
+  }));
+
+  $$('[data-run-routine]').forEach(btn => btn.addEventListener('click', () => {
+    const row = btn.closest('.routine');
+    btn.textContent = '已开始';
+    btn.disabled = true;
+    setTimeout(() => { btn.textContent = '立即运行'; btn.disabled = false; }, 2400);
+    toast(`${row.querySelector('.routine-title').textContent} 已开始执行`);
+  }));
+  $$('.switch').forEach(sw => sw.addEventListener('click', () => {
+    const on = sw.classList.toggle('is-on');
+    sw.setAttribute('aria-checked', String(on));
+  }));
+
+  // Approval card
+  const approval = $('#approvalCard');
+  $('[data-approve]').addEventListener('click', () => {
+    approval.classList.add('is-approved');
+    $('#approvalChip').innerHTML = '<span class="dot"></span>已通过';
+    $('#approvalChip').style.background = 'var(--success-soft)';
+    $('#approvalChip').style.color = 'var(--success)';
+    $('#approvalActions').outerHTML = '<div class="approval-done"><svg class="icon"><use href="#i-check"/></svg>已通过，状态已同步到 Workspace Hub 看板</div>';
+    toast('已通过，Workspace Hub 看板已更新');
+  });
+  $('[data-revise]').addEventListener('click', () => {
+    $('#revisionBox').hidden = false;
+    $('#revisionText').focus();
+  });
+  $('#revisionCancel').addEventListener('click', () => { $('#revisionBox').hidden = true; });
+  $('#revisionSubmit').addEventListener('click', () => {
+    const value = $('#revisionText').value.trim();
+    if (!value) { toast('先写下要改哪一项'); return; }
+    $('#revisionBox').hidden = true;
+    $('#approvalChip').innerHTML = '<span class="dot"></span>修改中';
+    toast('修改要求已发回 Growth');
+  });
+  $('[data-dismiss]').addEventListener('click', () => {
+    approval.style.opacity = '0';
+    setTimeout(() => { approval.hidden = true; }, 150);
+    toast('已忽略这次审批');
+  });
+
+  // Composer
+  const input = $('#composerInput');
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = `${Math.min(input.scrollHeight, 120)}px`;
+  });
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+  $('#sendButton').addEventListener('click', sendMessage);
+  function sendMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+    if (currentChat === 'growth') {
+      const article = document.createElement('article');
+      article.className = 'msg-user bot-growth';
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble-user';
+      bubble.textContent = text;
+      const meta = document.createElement('div');
+      meta.className = 'msg-meta';
+      meta.textContent = `你 · ${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`;
+      article.append(bubble, meta);
+      $('#threadMessages').append(article);
+      const scroll = $('#threadScroll');
+      scroll.scrollTop = scroll.scrollHeight;
+    }
+    input.value = '';
+    input.style.height = 'auto';
+    toast(`已派给 ${chats[currentChat].name}，完成后会回来等你审批`);
+  }
+
+  // Working verb rotation
+  if (!reduceMotion) {
+    setInterval(() => {
+      if (document.hidden || currentChat !== 'growth') return;
+      const el = $('#activityVerb');
+      if (!el) return;
+      verbIndex = (verbIndex + 1) % verbs.length;
+      el.textContent = verbs[verbIndex];
+      const header = $('#threadStatus');
+      if (header) header.textContent = `Working · ${verbs[verbIndex]}`;
+    }, 4600);
+  }
+
+  // Tasks
+  function applyFilter(filter) {
+    currentFilter = filter;
+    $$('.filter-tab').forEach(t => {
+      const active = t.dataset.filter === filter;
+      t.classList.toggle('is-active', active);
+      t.setAttribute('aria-selected', String(active));
+    });
+    $$('.task-row').forEach(row => { row.hidden = row.dataset.status !== filter; });
+  }
+  $$('.filter-tab').forEach(tab => tab.addEventListener('click', () => applyFilter(tab.dataset.filter)));
+
+  function updateTaskCounts() {
+    const counts = { review: 0, working: 0, done: 0 };
+    $$('.task-row').forEach(row => { if (counts[row.dataset.status] !== undefined) counts[row.dataset.status]++; });
+    Object.entries(counts).forEach(([key, value]) => {
+      const el = $(`[data-count="${key}"]`);
+      if (el) el.textContent = value;
+    });
+    $('#statReview').textContent = counts.review;
+    $('#statWorking').textContent = counts.working;
+    $('#statDone').textContent = counts.done;
+  }
+
+  $$('[data-task-approve]').forEach(btn => btn.addEventListener('click', () => {
+    const row = btn.closest('.task-row');
+    row.dataset.status = 'done';
+    row.querySelector('.task-state').innerHTML = '<span class="state-dot done"></span>已完成';
+    row.querySelector('.task-time').textContent = '刚刚';
+    row.querySelector('.task-actions').innerHTML = '<span class="done-label"><svg class="icon"><use href="#i-check"/></svg>已通过</span>';
+    updateTaskCounts();
+    applyFilter(currentFilter);
+    toast('任务已通过');
+  }));
+  $$('[data-task-revise]').forEach(btn => btn.addEventListener('click', () => toast('修改要求已发回 Bot')));
+  $$('[data-task-dismiss]').forEach(btn => btn.addEventListener('click', () => {
+    const row = btn.closest('.task-row');
+    row.style.opacity = '0';
+    setTimeout(() => { row.remove(); updateTaskCounts(); }, 150);
+    toast('任务已忽略');
+  }));
+  $$('[data-go-chat]').forEach(btn => btn.addEventListener('click', () => { setView('chat'); renderChat('growth'); }));
+
+  // Marketplace
+  function applyMarketFilter() {
+    const q = $('#marketSearch').value.trim().toLowerCase();
+    let visible = 0;
+    $$('.bot-card').forEach(card => {
+      const cat = currentCat === 'all' || card.dataset.cat === currentCat;
+      const search = !q || card.dataset.search.includes(q) || card.textContent.toLowerCase().includes(q);
+      card.hidden = !(cat && search);
+      if (!card.hidden) visible++;
+    });
+    $('#marketEmpty').hidden = visible > 0;
+  }
+  $$('.cat-chip').forEach(chip => chip.addEventListener('click', () => {
+    currentCat = chip.dataset.catFilter;
+    $$('.cat-chip').forEach(c => {
+      const active = c === chip;
+      c.classList.toggle('is-active', active);
+      c.setAttribute('aria-selected', String(active));
+    });
+    applyMarketFilter();
+  }));
+  $('#marketSearch').addEventListener('input', applyMarketFilter);
+  $$('[data-add-bot]').forEach(btn => btn.addEventListener('click', () => {
+    const card = btn.closest('.bot-card');
+    btn.outerHTML = '<span class="installed"><svg class="icon icon-sm"><use href="#i-check"/></svg>已添加</span>';
+    toast(`${card.querySelector('.bot-card-name').textContent} 已加入团队`);
+  }));
+
+  // Modal logic
+  function openModal(id) {
+    const layer = document.getElementById(`modal-${id}`);
+    if (!layer) return;
+    lastFocus = document.activeElement;
+    layer.classList.add('is-open');
+    layer.setAttribute('aria-hidden', 'false');
+    const focusable = layer.querySelector('input, textarea, select') || layer.querySelector('button');
+    setTimeout(() => focusable && focusable.focus(), 20);
+  }
+  function closeModal(layer) {
+    if (!layer) return;
+    layer.classList.remove('is-open');
+    layer.setAttribute('aria-hidden', 'true');
+    if (lastFocus) lastFocus.focus();
+  }
+  $$('[data-open-modal]').forEach(btn => btn.addEventListener('click', () => openModal(btn.dataset.openModal)));
+  $$('[data-close-modal]').forEach(btn => btn.addEventListener('click', () => closeModal(btn.closest('.modal-layer'))));
+  $$('.modal-layer').forEach(layer => layer.addEventListener('click', e => { if (e.target === layer) closeModal(layer); }));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal($('.modal-layer.is-open')); });
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    const layer = $('.modal-layer.is-open');
+    if (!layer) return;
+    const focusable = $$('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href]', layer).filter(el => el.offsetParent !== null);
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+
+  $$('.avatar-choice').forEach(btn => btn.addEventListener('click', () => {
+    $$('.avatar-choice').forEach(b => b.classList.remove('is-selected'));
+    btn.classList.add('is-selected');
+  }));
+  $$('.swatch').forEach(btn => btn.addEventListener('click', () => {
+    $$('.swatch').forEach(b => b.classList.remove('is-selected'));
+    btn.classList.add('is-selected');
+  }));
+  $('#newBotForm').addEventListener('submit', e => {
+    e.preventDefault();
+    closeModal($('#modal-new-bot'));
+    toast('Bot 已创建，正在准备共享 Computer');
+  });
+  $('#teachForm').addEventListener('submit', e => {
+    e.preventDefault();
+    closeModal($('#modal-teach-task'));
+    toast('Routine 已保存，可在面板里随时运行');
+  });
+
+  function renumberSteps() {
+    $$('#stepList .step-row').forEach((row, index) => {
+      row.querySelector('.step-num').textContent = index + 1;
+      row.querySelector('.step-input').setAttribute('aria-label', `步骤 ${index + 1}`);
+    });
+    $('#stepCount').textContent = `${$$('#stepList .step-row').length} 个`;
+  }
+  $('#addStep').addEventListener('click', () => {
+    const row = document.createElement('div');
+    row.className = 'step-row';
+    row.innerHTML = '<span class="step-grip"><svg class="icon"><use href="#i-grip"/></svg></span><span class="step-num"></span><input class="step-input" placeholder="写一个可执行的步骤" aria-label="新步骤"><button type="button" class="step-remove" aria-label="删除步骤"><svg class="icon"><use href="#i-close"/></svg></button>';
+    $('#stepList').append(row);
+    renumberSteps();
+    row.querySelector('input').focus();
+    bindRemoveStep(row.querySelector('.step-remove'));
+  });
+  function bindRemoveStep(btn) {
+    btn.addEventListener('click', () => {
+      const rows = $$('#stepList .step-row');
+      if (rows.length <= 1) { toast('至少保留一个步骤'); return; }
+      btn.closest('.step-row').remove();
+      renumberSteps();
+    });
+  }
+  $$('.step-remove').forEach(bindRemoveStep);
+
+  // Keyboard shortcut for command
+  document.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      setView('chat');
+      $('#railSearch').focus();
+    }
+  });
+})();
+</script>
+</body>
+</html>

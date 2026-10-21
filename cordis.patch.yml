@@ -1,0 +1,6 @@
+# Deepseek Bot Army — always-on AI teammates for the Harness Web UI.
+# Host half: bot store, bot agents, routine/memory state and the local API.
+# Client half: the Bots panel, sidebar entry and chat surface.
+- insert:
+    - id: deepseek-bot-army
+      name: '@local/deepseek-bot-army'
